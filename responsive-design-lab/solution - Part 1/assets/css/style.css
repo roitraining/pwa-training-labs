@@ -1,0 +1,27 @@
+html, body {
+	background-image: linear-gradient(to bottom, rgb(0, 0, 0) 0%,  #053f2d 50%, #507905 100%);
+	color: white;
+}
+
+.image1 {
+	display:block;
+	padding: 30px;
+}
+
+@media (min-width: 767px) {
+	.image1{
+		float:right;
+	  }
+   
+}
+
+@media (max-width: 480px) {
+	.image1{
+		float:none;
+		max-width: 80%;
+		padding:5px;
+	  }
+   
+}
+
+
