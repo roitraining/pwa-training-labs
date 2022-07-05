@@ -16,14 +16,18 @@ limitations under the License.
 (function() {
   'use strict';
 
+  // TODO 2.6 - Handle the notificationclose event
   self.addEventListener('notificationclose', function(e) {
     var notification = e.notification;
     var primaryKey = notification.data.primaryKey;
-
+  
     console.log('Closed notification: ' + primaryKey);
   });
-
+  
+  // TODO 2.7 - Handle the notificationclick event
   self.addEventListener('notificationclick', function(e) {
+
+    // TODO 2.8 - change the code to open a custom page
     var notification = e.notification;
     var primaryKey = notification.data.primaryKey;
     var action = e.action;
@@ -31,46 +35,20 @@ limitations under the License.
     if (action === 'close') {
       notification.close();
     } else {
-      e.waitUntil(
-        clients.matchAll().then(function(clis) {
-          var client = clis.find(function(c) {
-            return c.visibilityState === 'visible';
-          });
-          if (client !== undefined) {
-            client.navigate('samples/page' + primaryKey + '.html');
-            client.focus();
-          } else {
-            // there are no visible windows. Open one.
-            clients.openWindow('samples/page' + primaryKey + '.html');
-            notification.close();
-          }
-        })
-      );
+      clients.openWindow('samples/page' + primaryKey + '.html');
+      notification.close();
     }
-
-    self.registration.getNotifications().then(function(notifications) {
-      notifications.forEach(function(notification) {
-        notification.close();
-      });
-    });
   });
-
+  
+  // TODO 3.1 - add push event listener
   self.addEventListener('push', function(e) {
-    var body;
-
-    if (e.data) {
-      body = e.data.text();
-    } else {
-      body = 'Default body';
-    }
-
-    var options = {
-      body: body,
+    const options = {
+      body: 'This notification was generated from a push!',
       icon: 'images/notification-flat.png',
       vibrate: [100, 50, 100],
       data: {
         dateOfArrival: Date.now(),
-        primaryKey: 1
+        primaryKey: '-push-notification'
       },
       actions: [
         {action: 'explore', title: 'Go to the site',
@@ -80,17 +58,8 @@ limitations under the License.
       ]
     };
     e.waitUntil(
-      clients.matchAll().then(function(c) {
-        console.log(c);
-        if (c.length === 0) {
-          // Show notification
-          self.registration.showNotification('Push Notification', options);
-        } else {
-          // Send a message to the page to update the UI
-          console.log('Application is already open!');
-        }
-      })
+      self.registration.showNotification('Hello world!', options)
     );
   });
-
+  
 })();

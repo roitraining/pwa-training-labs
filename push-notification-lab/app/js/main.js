@@ -17,10 +17,8 @@ var app = (function() {
   'use strict';
 
   var isSubscribed = false;
-  var swRegistration = null;
 
   var notifyButton = document.querySelector('.js-notify-btn');
-  var pushButton = document.querySelector('.js-push-btn');
 
   // TODO 2.1 - check for notification support
 

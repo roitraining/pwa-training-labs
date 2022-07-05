@@ -20,113 +20,63 @@ var app = (function() {
   var swRegistration = null;
 
   var notifyButton = document.querySelector('.js-notify-btn');
-  var pushButton = document.querySelector('.js-push-btn');
 
+  // TODO 2.1 - check for notification support
   if (!('Notification' in window)) {
-    console.log('Notifications not supported in this browser');
+    console.log('This browser does not support notifications!');
     return;
   }
-
+  
+  // TODO 2.2 - request permission to show notifications
   Notification.requestPermission(function(status) {
     console.log('Notification permission status:', status);
   });
-
+  
   function displayNotification() {
+
+    // TODO 2.3 - display a Notification
     if (Notification.permission == 'granted') {
       navigator.serviceWorker.getRegistration().then(function(reg) {
-        var options = {
+    
+        // TODO 2.4 - Add 'options' object to configure the notification
+        const options = {
           body: 'First notification!',
-          tag: 'id1',
           icon: 'images/notification-flat.png',
           vibrate: [100, 50, 100],
           data: {
             dateOfArrival: Date.now(),
-            primaryKey: 1
+            primaryKey: 2
           },
+        
+          // TODO 2.5 - add actions to the notification
           actions: [
             {action: 'explore', title: 'Go to the site',
               icon: 'images/checkmark.png'},
             {action: 'close', title: 'Close the notification',
               icon: 'images/xmark.png'},
           ]
+          
+          // TODO 5.1 - add a tag to the notification
+        
         };
+        
         reg.showNotification('Hello world!', options);
       });
     }
+    
   }
 
   function initializeUI() {
-    pushButton.addEventListener('click', function() {
-      pushButton.disabled = true;
-      if (isSubscribed) {
-        unsubscribeUser();
-      } else {
-        subscribeUser();
-      }
-    });
 
-    // Set the initial subscription value
-    swRegistration.pushManager.getSubscription()
-    .then(function(subscription) {
-      isSubscribed = (subscription !== null);
-
-      updateSubscriptionOnServer(subscription);
-
-      if (isSubscribed) {
-        console.log('User IS subscribed.');
-      } else {
-        console.log('User is NOT subscribed.');
-      }
-
-      updateBtn();
-    });
   }
 
-  var applicationServerPublicKey = 'YOUR_VAPID_PUBLIC_KEY';
 
   function subscribeUser() {
-    var applicationServerKey = urlB64ToUint8Array(applicationServerPublicKey);
-    swRegistration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: applicationServerKey
-    })
-    .then(function(subscription) {
-      console.log('User is subscribed:', subscription);
 
-      updateSubscriptionOnServer(subscription);
-
-      isSubscribed = true;
-
-      updateBtn();
-    })
-    .catch(function(err) {
-      if (Notification.permission === 'denied') {
-        console.warn('Permission for notifications was denied');
-      } else {
-        console.error('Failed to subscribe the user: ', err);
-      }
-      updateBtn();
-    });
   }
 
   function unsubscribeUser() {
-    swRegistration.pushManager.getSubscription()
-    .then(function(subscription) {
-      if (subscription) {
-        return subscription.unsubscribe();
-      }
-    })
-    .catch(function(error) {
-      console.log('Error unsubscribing', error);
-    })
-    .then(function() {
-      updateSubscriptionOnServer(null);
 
-      console.log('User is unsubscribed');
-      isSubscribed = false;
-
-      updateBtn();
-    });
   }
 
   function updateSubscriptionOnServer(subscription) {
@@ -190,7 +140,7 @@ var app = (function() {
 
       swRegistration = swReg;
 
-      initializeUI();
+
     })
     .catch(function(error) {
       console.error('Service Worker Error', error);

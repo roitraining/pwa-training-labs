@@ -13,43 +13,59 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-var idbApp = (function() {
+var idbApp = (function () {
   'use strict';
 
+  // TODO 2 - check for support
   if (!('indexedDB' in window)) {
     console.log('This browser doesn\'t support IndexedDB');
     return;
   }
 
-  var dbPromise = idb.open('couches-n-things', 5, function(upgradeDb) {
-    switch (upgradeDb.oldVersion) {
-      case 0:
-        // a placeholder case so that the switch block will
+  const db = idb.openDB('couches-n-things', 4, {
+    upgrade(upgradeDb, oldVersion, newVersion, transaction) {
+      switch (newVersion) {
+        case 0:
+        // a placeholder case so that the switch block will 
         // execute when the database is first created
         // (oldVersion is 0)
-      case 1:
-        console.log('Creating the products object store');
-        upgradeDb.createObjectStore('products', {keyPath: 'id'});
-      case 2:
-        console.log('Creating a name index');
-        var store = upgradeDb.transaction.objectStore('products');
-        store.createIndex('name', 'name', {unique: true});
-      case 3:
-        console.log('Creating description and price indexes');
-        var store = upgradeDb.transaction.objectStore('products');
-        store.createIndex('price', 'price');
-        store.createIndex('description', 'description');
-      case 4:
-        console.log('Creating the orders object store');
-        upgradeDb.createObjectStore('orders', {keyPath: 'id'});
+        case 1:
+          console.log('Creating the products object store');
+          upgradeDb.createObjectStore('products', { keyPath: 'id' });
+
+        // TODO 4.1 - create 'description and price' indexes
+        case 2:
+          console.log('Creating a name index');
+          const products = transaction.objectStore('products');
+          products.createIndex('name', 'name', { unique: true });
+
+        // TODO 4.2 - create 'price' and 'description' indexes
+        case 3:
+          console.log('Creating a name index');
+          const store = transaction.objectStore('products');
+          store.createIndex('price', 'price');
+          store.createIndex('description', 'description');
+
+        // TODO 5.1 - create an 'orders' object store
+        case 4:
+          console.log('Creating the orders object store');
+          upgradeDb.createObjectStore('orders', { keyPath: 'id' });
+
+      }
+
     }
+
   });
 
+
+
   function addProducts() {
-    dbPromise.then(function(db) {
-      var tx = db.transaction('products', 'readwrite');
-      var store = tx.objectStore('products');
-      var items = [
+
+    // TODO 3.3 - add objects to the products store
+    db.then((db) => {
+      const tx = db.transaction('products', 'readwrite');
+      const store = tx.objectStore('products');
+      const items = [
         {
           name: 'Couch',
           id: 'cch-blk-ma',
@@ -105,55 +121,61 @@ var idbApp = (function() {
           quantity: 11
         }
       ];
-      return Promise.all(items.map(function(item) {
-          console.log('Adding item: ', item);
-          return store.add(item);
-        })
-      ).catch(function(e) {
+      return Promise.all(items.map((item) => {
+        console.log('Adding item: ', item);
+        return store.add(item);
+      })
+      ).catch(function (e) {
         tx.abort();
         console.log(e);
-      }).then(function() {
+      }).then(function () {
         console.log('All items added successfully!');
       });
     });
+
   }
 
   function getByName(key) {
-    return dbPromise.then(function(db) {
-      var tx = db.transaction('products', 'readonly');
-      var store = tx.objectStore('products');
-      var index = store.index('name');
+
+    // TODO 4.3 - use the get method to get an object by name
+    return db.then((db) => {
+      const tx = db.transaction('products', 'readonly');
+      const store = tx.objectStore('products');
+      const index = store.index('name');
       return index.get(key);
     });
+
   }
 
   function displayByName() {
-    var key = document.getElementById('name').value;
-    if (key === '') {return;}
-    var s = '';
-    getByName(key).then(function(object) {
-      if (!object) {return;}
+    const key = document.getElementById('name').value;
+    if (key === '') { return; }
+    let s = '';
+    getByName(key).then(function (object) {
+      if (!object) { return; }
 
       s += '<h2>' + object.name + '</h2><p>';
-      for (var field in object) {
+      for (let field in object) {
         s += field + ' = ' + object[field] + '<br/>';
       }
       s += '</p>';
 
-    }).then(function() {
-      if (s === '') {s = '<p>No results.</p>';}
+    }).then(function () {
+      if (s === '') { s = '<p>No results.</p>'; }
       document.getElementById('results').innerHTML = s;
     });
   }
 
   function getByPrice() {
-    var lower = document.getElementById('priceLower').value;
-    var upper = document.getElementById('priceUpper').value;
-    var lowerNum = Number(document.getElementById('priceLower').value);
-    var upperNum = Number(document.getElementById('priceUpper').value);
 
-    if (lower === '' && upper === '') {return;}
-    var range;
+    // TODO 4.4a - use a cursor to get objects by price
+    const lower = document.getElementById('priceLower').value;
+    const upper = document.getElementById('priceUpper').value;
+    const lowerNum = Number(document.getElementById('priceLower').value);
+    const upperNum = Number(document.getElementById('priceUpper').value);
+
+    if (lower === '' && upper === '') { return; }
+    let range;
     if (lower !== '' && upper !== '') {
       range = IDBKeyRange.bound(lowerNum, upperNum);
     } else if (lower === '') {
@@ -161,57 +183,61 @@ var idbApp = (function() {
     } else {
       range = IDBKeyRange.lowerBound(lowerNum);
     }
-    var s = '';
-    dbPromise.then(function(db) {
-      var tx = db.transaction('products', 'readonly');
-      var store = tx.objectStore('products');
-      var index = store.index('price');
+    let s = '';
+    db.then(function (db) {
+      const tx = db.transaction('products', 'readonly');
+      const store = tx.objectStore('products');
+      const index = store.index('price');
       return index.openCursor(range);
     }).then(function showRange(cursor) {
-      if (!cursor) {return;}
-      console.log('Cursored at:', cursor.value.name);
+      if (!cursor) { return; }
+      console.log('Cursor at:', cursor.value.name);
       s += '<h2>Price - ' + cursor.value.price + '</h2><p>';
-      for (var field in cursor.value) {
+      for (let field in cursor.value) {
         s += field + '=' + cursor.value[field] + '<br/>';
       }
       s += '</p>';
       return cursor.continue().then(showRange);
-    }).then(function() {
-      if (s === '') {s = '<p>No results.</p>';}
+    }).then(function () {
+      if (s === '') { s = '<p>No results.</p>'; }
       document.getElementById('results').innerHTML = s;
     });
+
   }
 
   function getByDesc() {
-    var key = document.getElementById('desc').value;
-    if (key === '') {return;}
-    var range = IDBKeyRange.only(key);
-    var s = '';
-    dbPromise.then(function(db) {
-      var tx = db.transaction('products', 'readonly');
-      var store = tx.objectStore('products');
-      var index = store.index('description');
+    const key = document.getElementById('desc').value;
+    if (key === '') { return; }
+    const range = IDBKeyRange.only(key);
+    let s = '';
+    db.then(function (db) {
+      // TODO 4.4b - get items by their description
+      const tx = db.transaction('products', 'readonly');
+      const store = tx.objectStore('products');
+      const index = store.index('description');
       return index.openCursor(range);
     }).then(function showRange(cursor) {
-      if (!cursor) {return;}
+      if (!cursor) { return; }
       console.log('Cursored at:', cursor.value.name);
       s += '<h2>Price - ' + cursor.value.price + '</h2><p>';
-      for (var field in cursor.value) {
+      for (let field in cursor.value) {
         s += field + '=' + cursor.value[field] + '<br/>';
       }
       s += '</p>';
       return cursor.continue().then(showRange);
-    }).then(function() {
-      if (s === '') {s = '<p>No results.</p>';}
+    }).then(function () {
+      if (s === '') { s = '<p>No results.</p>'; }
       document.getElementById('results').innerHTML = s;
     });
   }
 
   function addOrders() {
-    dbPromise.then(function(db) {
-      var tx = db.transaction('orders', 'readwrite');
-      var store = tx.objectStore('orders');
-      var items = [
+
+    // TODO 5.2 - add items to the 'orders' object store
+    db.then((db) => {
+      const tx = db.transaction('orders', 'readwrite');
+      const store = tx.objectStore('orders');
+      const items = [
         {
           name: 'Cabinet',
           id: 'ca-brn-ma',
@@ -240,76 +266,86 @@ var idbApp = (function() {
           quantity: 3
         }
       ];
-      return Promise.all(items.map(function(item) {
-          console.log('Adding item: ', item);
-          return store.add(item);
-        })
-      ).then(function() {
-        console.log('All items added successfully!');
-      }).catch(function(e) {
+      return Promise.all(items.map((item) => {
+        console.log('Adding item: ', item);
+        return store.add(item);
+      })
+      ).catch(function (e) {
         tx.abort();
         console.log(e);
+      }).then(function () {
+        console.log('All items added successfully!');
       });
     });
+
   }
 
   function showOrders() {
-    var s = '';
-    dbPromise.then(function(db) {
-      var tx = db.transaction('orders', 'readonly');
-      var store = tx.objectStore('orders');
+    let s = '';
+    db.then(function (db) {
+
+      // TODO 5.3 - use a cursor to display the orders on the page
+      const tx = db.transaction('orders', 'readonly');
+      const store = tx.objectStore('orders');
       return store.openCursor();
     }).then(function showRange(cursor) {
       if (!cursor) {return;}
-      console.log('Cursored at:', cursor.value.name);
+      console.log('Cursor at:', cursor.value.name);
 
       s += '<h2>' + cursor.value.name + '</h2><p>';
-      for (var field in cursor.value) {
+      for (let field in cursor.value) {
         s += field + '=' + cursor.value[field] + '<br/>';
       }
       s += '</p>';
 
       return cursor.continue().then(showRange);
-    }).then(function() {
-      if (s === '') {s = '<p>No results.</p>';}
+    }).then(function () {
+      if (s === '') { s = '<p>No results.</p>'; }
       document.getElementById('orders').innerHTML = s;
     });
   }
 
   function getOrders() {
-    return dbPromise.then(function(db) {
-      var tx = db.transaction('orders', 'readonly');
-      var store = tx.objectStore('orders');
+
+    // TODO 5.4 - get all objects from 'orders' object store
+    return db.then((db) => {
+      const tx = db.transaction('orders', 'readonly');
+      const store = tx.objectStore('orders');
       return store.getAll();
     });
   }
 
   function fulfillOrders() {
-    getOrders().then(function(orders) {
+    getOrders().then(function (orders) {
       return processOrders(orders);
-    }).then(function(updatedProducts) {
+    }).then(function (updatedProducts) {
       updateProductsStore(updatedProducts);
     });
   }
 
   function processOrders(orders) {
-    return dbPromise.then(function(db) {
-      var tx = db.transaction('products');
-      var store = tx.objectStore('products');
+
+    // TODO 5.5 - get items in the 'products' store matching the orders
+    return db.then((db) => {
+      const tx = db.transaction('products');
+      const store = tx.objectStore('products');
       return Promise.all(
-        orders.map(function(order) {
-          return store.get(order.id).then(function(product) {
+        orders.map((order) => {
+          return store.get(order.id).then((product) => {
             return decrementQuantity(product, order);
           });
         })
       );
     });
+    
   }
 
   function decrementQuantity(product, order) {
+
+    // TODO 5.6 - check the quantity of remaining products
     return new Promise(function(resolve, reject) {
-      var item = product;
-      var qtyRemaining = item.quantity - order.quantity;
+      const item = product;
+      const qtyRemaining = item.quantity - order.quantity;
       if (qtyRemaining < 0) {
         console.log('Not enough ' + product.id + ' left in stock!');
         document.getElementById('receipt').innerHTML =
@@ -319,12 +355,14 @@ var idbApp = (function() {
       item.quantity = qtyRemaining;
       resolve(item);
     });
+    
   }
 
   function updateProductsStore(products) {
-    dbPromise.then(function(db) {
-      var tx = db.transaction('products', 'readwrite');
-      var store = tx.objectStore('products');
+    db.then((db) => {
+      // TODO 5.7 - update the items in the 'products' object store
+      const tx = db.transaction('products', 'readwrite');
+      const store = tx.objectStore('products');
       return Promise.all(products.map(function(item) {
           return store.put(item);
         })
@@ -340,7 +378,7 @@ var idbApp = (function() {
   }
 
   return {
-    dbPromise: (dbPromise),
+    dbPromise: (db),
     addProducts: (addProducts),
     getByName: (getByName),
     displayByName: (displayByName),

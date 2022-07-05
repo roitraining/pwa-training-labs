@@ -62,6 +62,35 @@ var app = (function() {
     .catch(returnFalse);
   }
 
+  function promiseA() {
+    return new Promise(function (resolve, reject) {
+      setTimeout(resolve, 500, 'one');
+    });
+  }
+
+  function promiseB() {
+    return new Promise(function (resolve, reject) {
+      setTimeout(resolve, 500, 'two');
+    });
+  }
+
+  function promiseC() {
+    return new Promise(function (resolve, reject) {
+      setTimeout(resolve, 500, 'three');
+    });
+  }
+  
+  async function nestedPromises() {
+    let answer = await promiseA() === 'one' ?
+      await promiseB() === 'two' ?  await promiseC() : 'not two' : 
+      answer = 'not one';
+    console.log(`answer = ${answer}`);
+   }
+
+  // TODO 3.1 - call nestedPromises();
+  nestedPromises();
+
+
   var promises = [
     getImageName('Spain'),
     getImageName('Chile'),

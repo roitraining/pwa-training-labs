@@ -18,7 +18,7 @@ var idbApp = (function() {
 
   // TODO 2 - check for support
 
-  var dbPromise;
+  const db = null;
 
   function addProducts() {
 
@@ -33,14 +33,14 @@ var idbApp = (function() {
   }
 
   function displayByName() {
-    var key = document.getElementById('name').value;
+    const key = document.getElementById('name').value;
     if (key === '') {return;}
-    var s = '';
+    let s = '';
     getByName(key).then(function(object) {
       if (!object) {return;}
 
       s += '<h2>' + object.name + '</h2><p>';
-      for (var field in object) {
+      for (let field in object) {
         s += field + ' = ' + object[field] + '<br/>';
       }
       s += '</p>';
@@ -58,11 +58,11 @@ var idbApp = (function() {
   }
 
   function getByDesc() {
-    var key = document.getElementById('desc').value;
+    const key = document.getElementById('desc').value;
     if (key === '') {return;}
-    var range = IDBKeyRange.only(key);
-    var s = '';
-    dbPromise.then(function(db) {
+    const range = IDBKeyRange.only(key);
+    let s = '';
+    db.then(function(db) {
 
       // TODO 4.4b - get items by their description
 
@@ -79,8 +79,8 @@ var idbApp = (function() {
   }
 
   function showOrders() {
-    var s = '';
-    dbPromise.then(function(db) {
+    let s = '';
+    db.then(function(db) {
 
       // TODO 5.3 - use a cursor to display the orders on the page
 
@@ -117,7 +117,7 @@ var idbApp = (function() {
   }
 
   function updateProductsStore(products) {
-    dbPromise.then(function(db) {
+    db.then(function(db) {
 
       // TODO 5.7 - update the items in the 'products' object store
 
@@ -129,7 +129,7 @@ var idbApp = (function() {
   }
 
   return {
-    dbPromise: (dbPromise),
+    dbPromise: (db),
     addProducts: (addProducts),
     getByName: (getByName),
     displayByName: (displayByName),

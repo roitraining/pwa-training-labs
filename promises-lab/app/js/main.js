@@ -37,6 +37,52 @@ var app = (function() {
     // TODO
   }
 
+  function promiseA() {
+    return new Promise(function (resolve, reject) {
+      setTimeout(resolve, 500, 'one');
+    });
+  }
+
+  function promiseB() {
+    return new Promise(function (resolve, reject) {
+      setTimeout(resolve, 500, 'two');
+    });
+  }
+
+  function promiseC() {
+    return new Promise(function (resolve, reject) {
+      setTimeout(resolve, 500, 'three');
+    });
+  }
+  
+  function nestedPromises() {
+    let answer;
+    return promiseA().then(arg => {
+      if (arg === 'one') {
+        promiseB().then(arg => {
+          if (arg === 'two') {
+            promiseC().then(arg => {
+              answer =  arg;
+              console.log(`answer = ${answer}`);
+            })
+          }
+          else {
+            answer = 'not two';
+            console.log(`answer = ${answer}`);
+
+          }
+        })
+      }
+      else {
+        answer = 'not one';
+        console.log(`answer = ${answer}`);
+      }
+    });
+
+  }
+
+  // TODO 3.1 - call nestedPromises();
+
   // TODO 4.1 - Promise.all
 
   // TODO 4.2 - Promise.race

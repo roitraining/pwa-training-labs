@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Web Components Lab</title>
+  <script src="hello.js"></script>
+  <script type="module" src="./lit.js"></script>
+</head>
+
+<body>
+  <p>
+    Add your first element here: 
+  </p>
+  <form>
+    <label for="caption">Image caption:</label>
+    <input type="text" name="caption" id="caption" size="30" placeholder="caption" />
+    <drop-element id="dropper"></drop-element>
+    <input id="submit" type="button" value="submit" />
+  </form>
+  <div id="display"></div>
+  <script>
+    document.getElementById('submit').addEventListener('click', 
+    e => {
+      document.getElementById('display').innerHTML = `
+      <h2>The values in the form are: </h2>
+      <p>Caption input value:<br> ${ document.getElementById('caption').value }</p>
+     
+      `
+    });
+  </script>
+</body>
+
+</html>
